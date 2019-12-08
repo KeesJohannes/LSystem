@@ -1,4 +1,4 @@
-axiom = "c";
+axiom = "a";
 rules = [];
 actions = [];
 sentence = axiom;
@@ -32,10 +32,22 @@ function move(n) {
     let pn = p5.Vector.add(turtle,p5.Vector.mult(tdir,n));
     line(turtle.x,turtle.y,pn.x,pn.y);
     turtle = pn;
+    doText(`move ${n}`)
+}
+
+function doText(s) {
+    push()
+    fill("#000000")
+    noStroke();
+    rect(10,-295,50,-20)
+    fill("#ffffff")
+    text(s,10,-300);
+    pop();
 }
 
 function turn(g) {
     tdir.rotate(g*PI/180);
+    doText(`turn ${Math.floor(g)}`)
 }
 
 function toAccu(a) {
@@ -106,10 +118,10 @@ function carryOut(s,level) {
     }
 }
 
-function carryOutQ(s,level) {
+function* carryOutQ(s,level) {
     let maxlen = 1;
     let ql = [[...s]];
-    count = 9000;
+    count = 10000;
     maxlen = s.length;
     while (ql.length>0 && count>0) {
         maxlen = max(maxlen,ql.reduce((a,b)=>max(a,b.length),0));
@@ -123,34 +135,55 @@ function carryOutQ(s,level) {
                 if (ind>=0) {
                     ql.push([...rules[ind].seq])
                 } else {
-                    executeItem(c);
+//                    executeItem(c);
+                    yield c;
                 }
             } else {
-                executeItem(c);
+//                executeItem(c);
+                yield c;
             }
         }
     }
-//    print("qlc",maxlen)
+    print("qlc",maxlen)
 }
 
 function setup() {
     createCanvas(800,800);
     background(0);
     translate(width*0.5,3*height/4);
-    noLoop()
+//    noLoop()
+    frameRate(2);
     angle = PI/3;
     accu = 180*angle/PI;
     turtle = createVector(0,0);
-    tdir = createVector(5,0);
+    tdir = createVector(10,0);
     initSystem();
     stroke(255);
     strokeWeight(1);
 //    carryOut(axiom,4)
-    carryOutQ(axiom,5);
+//    carryOutQ(axiom,4);
+    cry = carryOutQ(axiom,3)
 //    print("res:",res)
 }
 
+let cry = null;
+
 function draw() {
+    translate(width*0.01,3*height/4);
+    stroke(255);
+    strokeWeight(1);
+
+    let c = cry.next();
+    while (!c.done && "abcdeT".indexOf(c.value)<0) {
+        executeItem(c.value);
+        c = cry.next();
+    }
+    if (!c.done) {
+        executeItem(c.value);
+//        print(c);
+    } else {
+        noLoop();
+    }
 
 }
 
